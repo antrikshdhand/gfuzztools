@@ -1,0 +1,6 @@
+<start> ::= <sentence>
+<sentence> ::= <noun_phrase> <verb>
+<noun_phrase> ::= <article> <noun>
+<noun> ::= "horse" | "dog" | "hamster"
+<article> ::= "a" | "the"
+<verb> ::= "stands" | "walks" | "jumps"
