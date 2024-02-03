@@ -5,7 +5,8 @@
 #include <time.h>
 
 /**
- * @brief Perform inverse unification on a given key in a grammar. 
+ * @brief Perform inverse unification on a given key in a grammar and stores
+ * the fuzzed strings into a `TokenArray`.
  * 
  * @param key
  * @param grammar

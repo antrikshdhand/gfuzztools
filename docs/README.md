@@ -5,23 +5,24 @@
     <p align="center">
         Tools for working with grammars written in C.
         <br />
-        <!--<a href="">View User Guide</a>
+        <a href="./DeveloperGuide.md">Developer Guide</a>
         ·
-        <a href="">View Developer Guide</a>
+        <a href="https://github.com/antrikshdhand/gfuzztools/issues">Issues</a>
         ·
-        <a href="">About Us</a>-->
+        <a href="https://github.com/antrikshdhand/gfuzztools/pulls">PRs</a>
     </p>
 </div>
 
-`gfuzztools` aims to provide users with the foundational structures and functions to work with a BNF grammar in the C programming language. It is the low-level implementation of a [Python library](https://rahul.gopinath.org/post/2021/07/27/random-sampling-from-context-free-grammar/#populating-the-linked-data-structure) written by [Dr Rahul Gopinath](https://www.sydney.edu.au/engineering/about/our-people/academic-staff/rahul-gopinath.html).
 
-### Key features
-- Optimised grammar representation: define grammars in C using an 8-bit representation instead of strings, avoiding slow string operations.
-- JSON Converter: convert your existing JSON representation into our C representation effortlessly.
-- Fuzzing functions: generate strings from the defined grammar for testing and validation.
-- String extraction: extract all strings from a grammar or retrieve a specific string at a given index.
-- Speed: preliminary testing shows a 20x speedup in the C implementation compared to the Python implementation.
-- [Future expansion] Ongoing work to include functionality for randomly sampling strings from grammars.
+`gfuzztools` is a collection of tools designed to facilitate working with BNF grammars in the C programming language.  It is the low-level implementation of a [Python library](https://rahul.gopinath.org/post/2021/07/27/random-sampling-from-context-free-grammar/#populating-the-linked-data-structure) written by [Dr Rahul Gopinath]().
+
+### Key Features
+- **Optimized Grammar Representation:** Define grammars in C using an 8-bit representation, offering a performance boost over traditional string-based approaches.
+- **JSON Converter:** Seamlessly convert existing JSON representations into our efficient C representation.
+- **Fuzzing Functions:** Generate strings from defined grammars for comprehensive testing and validation.
+- **String Extraction:** Extract all strings from a grammar or retrieve a specific string at a given index.
+- **Speed:** Preliminary testing indicates a 20x speedup compared to the Python implementation.
+- **Future Expansion:** Ongoing work includes implementing functionality for randomly sampling strings from grammars.
 
 <br>
 
@@ -31,270 +32,52 @@
 ## Table of Contents
 
 - [Getting started](#getting-started)
-- [Structure](#structure)
-    - [The 8-bit representation used in C](#the-8-bit-representation-used-in-c)
-    - [Our grammar representation](#our-grammar-representation)
-    - [Converting your grammar](#converting-your-grammar)
-- [Using the fuzzer](#using-the-fuzzer) 
-- [Sampling a string from a grammar](#sampling-a-string-from-a-grammar) 
-    - [The cornerstone functions](#the-cornerstone-functions)
-    - [Supplementary functions](#supplementary-functions)
-- [Future work and contributions](#future-work-and-contributions) 
+- [Usage](#usage) 
+- [Roadmap](#roadmap)
+- [Contributions](#contributions)
 - [Licence](#licence)
 - [Contact](#contact)
 
-
 ## Getting started
 
-This program follows the C99 standard, and the project uses [`gcc`](https://gcc.gnu.org) for compilation. 
+This program adheres to the C99 standard, utilizing [`gcc`](https://gcc.gnu.org) for compilation. Clone the repository and run any of the examples using:
 
-Our directory structure is as follows:
+```make [example, counts, strings, at]```
 
-```
-gfuzztools/
-├── bin/            # .o files
-├── data/           # Grammar src files
-├── docs/           # README.md, LICENSE etc.
-├── examples/       # Example usage of gfuzztools
-│   └── tool_name/
-├── include/        # C header files
-│   ├── tool_1/
-│   ├── tool_2/
-│   └── # common header files
-├── src/            # C source files
-│   ├── tool_1/
-│   ├── tool_2/
-│   └── # common source files
-└── .gitignore
-```
+## Usage
 
-## Structure
+Refer to our [Developer Guide](./DeveloperGuide.md) for an in-depth explanation of the codebase and how to utilise the `gfuzztools` library effectively.
 
-### The 8-bit representation used in C
+## Roadmap 
 
-In order to optimise the code we try to avoid the use of strings in `gfuzztools`. Instead, we map each token in the grammar to an 8-bit number and then generate random "strings" from these bytes. This mapping allows us to see some smart optimisations such as checking if a token is non-terminal or not in O(1) time.
+### Motivation
 
-The mapping is simple: nonterminals are assigned 8-bit keys starting from `0x80`, and terminals are assigned 8-bit keys starting from `0x00`. That is, _if the MSB of the key is set, the token is a non-terminal._ 
+Formal grammars are often overlooked in the initial stages of programming language development, resulting in a disconnect between the intended grammar and the actual code. Grammar inference, both white-box and black-box, plays a crucial role in understanding a language's grammar. State-of-the-art grammar inference algorithms include [Angluin's L* algorithm](https://people.eecs.berkeley.edu/~dawnsong/teaching/s10/papers/angluin87.pdf) and the [TTT algorithm](https://link.springer.com/chapter/10.1007/978-3-319-11164-3_26).
 
-We also store and assign keys to all non-terminals in the order they appear in the grammar.  For example, in the simple grammar
-```
-<expression> ::= <term> "+" <term>
-<term> ::= <factor> "*" <factor>
-<factor> ::= "0" | "1" | "2" | ... | "9"
-```
-the first non-terminal (NT) is `<expression>` and so it would receive the key `0x80`. The second NT is `<term>` which would receive the key `0x81`, and finally `<factor>` would receive the key `0x82`. We would also store the grammar as such:
-```
-GRAMMAR = [<NT-struct for 0x80>, <NT-struct for 0x81>, <NT-struct for 0x82>]
-```
-This allows for the 4 least-significant bits of the key to also provide us with the index of the non-terminal in the grammar.
+The original motivation of `gfuzztools` was to set up a toolchain to compare the effectiveness of grammar inference algorithms. This comparison relies on two empirical values:
 
-### Our grammar representation
+- Precision: Measures how close the output of the grammar inference algorithm is to running a parser on the original grammar.
+- Recall: Measures how close the output of running a generating fuzzer on the original grammar is to running a parser on the inferred grammar.
 
-We use structures in C to represent each part of the grammar, and use a typedef'd `uint_8` data type to represent individual tokens in the grammar.
+We can then combine these two values using the $\text{F1}$ score:
+$$\text{F1 score} = \frac{2 \times \text{Precision} \times \text{Recall}}{\text{Precision} + \text{Recall}}$$
 
+However, it is key that the generating fuzzer is sampling strings **uniformly at random (UAR)**, otherwise [the measure will not be accurate](https://rahul.gopinath.org/post/2021/07/27/random-sampling-from-context-free-grammar/#random-sampling). Hence, the first milestone in `gfuzztools` is to produce a UAR sampler.
 
-```c
-/* ./include/grammar.h */
-
-typedef uint8_t Token;
-
-typedef struct Rule
-{
-    size_t num_tokens;
-    Token tokens[MAX_TOKENS_IN_RULE];
-} Rule;
-
-typedef struct NonTerminal
-{
-    Token name;
-    size_t num_rules;
-    Rule rules[MAX_RULES_FOR_NONTERMINAL];
-} NonTerminal;
-
-typedef struct Grammar
-{
-    size_t num_non_terminals;
-    NonTerminal non_terminals[MAX_NONTERMINALS_IN_GRAMMAR];
-} Grammar;
-```
-
-The use of structures naturally leads to a more complex grammar initialisation:
-
-```c
-Grammar GRAMMAR = {
-	// Number of NonTerminals 
-    6,
-
-    // Array of NonTerminals
-    {
-        // NonTerminal 1
-        {
-            // Name of NonTerminal
-            0x80,
-    
-            // Number of rules NonTerminal has
-            1,
-
-            // Array of Rules
-            {
-                // Rule 1
-                {
-                    // Number of Tokens in Rule
-                    1,
-
-                    // Array of Tokens
-                    {0x81}
-                }
-            }
-        },
-
-        // NonTerminal 2
-        {
-            0x81,
-            1,
-            {
-                {
-                    2,
-                    {0x82, 0x83}
-                }
-            }
-        },
-        
-        ...
-        
-    }
-};
-```
-To this end, we have developed a JSON-to-C converter which takes in a JSON grammar file as a command-line argument and outputs the C initialisation code of the grammar in the above format.
-
-### Converting your grammar
-
-Suppose you have a BNF grammar you wish to work with:
-
-```
-<start> ::= <sentence>
-<sentence> ::= <noun_phrase> <verb>
-<noun_phrase> ::= <article> <noun>
-<noun> ::= "horse" | "dog" | "hamster"
-<article> ::= "a" | "the"
-<verb> ::= "stands" | "walks" | "jumps"
-```
-
-This toolkit requires that you have this grammar converted into JSON format:
-
-```json
-{
-    "<start>": [["<sentence>"]],
-    "<sentence>": [["<noun_phrase>", "<verb>"]],
-    "<noun_phrase>": [["<article>", "<noun>"]],
-    "<noun>": [["horse"], ["dog"], ["hamster"]],
-    "<article>": [["a"], ["the"]],
-    "<verb>": [["stands"], ["walks"], ["jumps"]]
-}
-```
-
-Then, from the `./src/fuzzer/` directory, execute the Python script:
-```bash
-python3 ./src/converter.py <path_to_json_grammar_file>
-```
-
-Replace the contents of `GRAMMAR` in your main `.c` file with the outputted code found in `./data/grammar_c_8bit.txt`.
-
-Notes:
-- `converter.py` outputs the C initialisation code as well as a lookup table `grammar_lookup.txt` which shows you the keys for every token in the grammar.
-- `converter.py` can be run with the `--debug` flag to output a debug-friendly version of the C initialisation code which uses the raw token strings rather than the 8-bit keys.
-- We do not dynamically read in the JSON and convert it to C in order to optimise resources. Having the grammar stored in static memory is much faster.
-
-## Using the fuzzer
-
-The first and most basic tool to try in `gfuzztools` is the fuzzer. The program simply aims to generates random strings from a given grammar.
-
-The relevant files can be found in the `./fuzzer` directories inside `src/`, `include/` and `examples/`.
-
-The program is reliant on two inputs to run:
-
-1. `GRAMMAR`: the grammar you want to generate strings from, and
-2. `START_TOKEN`: which token you wish to start fuzzing from
-
-Refer to [Converting your grammar](#converting-your-grammar) for more details on how to set up `GRAMMAR`. Set `START_TOKEN` to any token in the grammar (usually the first non-terminal, 0x80). Initialise your `TokenArray`, call `unify_key_inv()`, and then see the fuzzed result with `print_token_array()`.
-
-> **Try it out!**
-> 
-> Execute the following commands once you have cloned the repository locally:
-> `make fuzzer_example` and `./bin/fuzzer_example.o`.
->
-> You should see three different 8-bit tokens printed to your terminal each time you run the program.
-
-The fuzzer here is an implementation of [The simplest grammar fuzzer in the world](https://rahul.gopinath.org/post/2019/05/28/simplefuzzer-01/), originally written by [Dr Rahul Gopinath](https://www.sydney.edu.au/engineering/about/our-people/academic-staff/rahul-gopinath.html). 
-
-## Sampling a string from a grammar
-
-The primary objective of this tool is to enable the random sampling of valid strings generated from a specified grammar. The sampling algorithm unfolds in three fundamental steps:
-
-1. Counting strings: Calculate the total number of strings of a given size that can be produced from the grammar.
-2. Enumeration: Enumerate all the strings that the grammar can produce.
-3. Random sampling: Randomly select a specific string from the enumeration, allowing for uniform random sampling.
-
-### The cornerstone functions
-
-The `key_get_def()` and `rule_get_def()` functions serve as the cornerstone for obtaining the definition of a non-terminal or terminal key in the grammar, given a specific string length. To use:
-```c
-Token key = ...; // specify the key
-Grammar* grammar = ...; // provide the grammar
-size_t l_str = ...; // specify the string length
-KeyNode* definition = key_get_def(key, grammar, l_str);
-```
-These functions efficiently explore the grammar, recursively constructing the definition for non-terminals by analysing their rules. For terminal keys, it verifies the length match before establishing the definition. Memoization enhances performance by storing and retrieving previously computed results.
-
-### Supplementary functions
-
-These functions build upon the `key_get_def()` to add to the functionality of the program:
-
-#### `get_count()`
-
-The `get_count()` functions calculate the total count of possible strings of a given length that a key node can produce. 
-
-```c
-KeyNode* definition = key_get_def(...) // the KeyNode result from above
-int count = get_count(definition);
-```
-
-It considers both the count of the key itself and recursively includes the counts from its associated rules.
-
-#### `extract_strings()`
-
-The `extract_strings()` functions generate a list of dynamic token arrays (DTAs), each representing a possible string produced by a key node.
-
-```c
-KeyNode* definition = key_get_def(...) // the KeyNode result from above
-DynTokenArray* strings = extract_strings(definition);
-```
-
-#### `get_string_at()`
-
-For exact string retrieval, the `get_string_at()` functions enable the extraction of a specific string at a given index. 
-```c
-KeyNode* definition = key_get_def(...) // the KeyNode result from above
-int index = ...; // specify the index
-DynTokenArray* string = get_string_at(definition, index);
-```
-It navigates through the grammar considering both key nodes and rule nodes to pinpoint the desired string.
-
-> **Try it out!**
-> 
-> Execute the following commands once you have cloned the repository locally:
-> `make sampling_strings` and `./bin/sampling_strings.o`.
->
-> You should see a print-out of multiple nodes (representing phrases) containing several tokens (representing words).
-
-These functions collectively allow us to efficiently explore and extract valid strings from a grammar.
-
-## Future work and contributions
+### Future work
 
 `gfuzztools` is a work-in-progress. There are several improvements and additions yet to come, including:
-- Implementing a UAR sampling function
-- Printing out stringified tokens rather than 8-bit numbers
-- fix print_rule_hash_table() function
+- Implementing the UAR sampling function
+- Work in the field of grammar inference, including:
+    - Implementing Angluin's L* algorithm in C
+
+See the [open issues](https://github.com/antrikshdhand/gfuzztools/issues) for a full list of proposed features and known issues.
+
+## Contributions
+
+[![Contributors](https://img.shields.io/github/contributors/antrikshdhand/gfuzztools?label=Contributors&style=flat-square)](https://github.com/AY2324S1-CS2113-T18-1/tp/graphs/contributors)
+[![Issues](https://img.shields.io/github/issues/antrikshdhand/gfuzztools?style=flat-square&label=Latest%20issues)](https://github.com/AY2324S1-CS2113-T18-1/tp/issues)
+[![PRs](https://img.shields.io/github/issues-pr/antrikshdhand/gfuzztools?style=flat-square&label=Pull%20requests)](https://github.com/AY2324S1-CS2113-T18-1/tp/pulls)
 
 All contributions are greatly appreciated! If you have a suggestion that would make this project better, please fork the repo and create a pull request.
 
@@ -317,5 +100,3 @@ See below for contact details.
 | Supervisor | Dr. Rahul Gopinath | rahul.gopinath@sydney.edu.au |
 |------------|--------------------|------------------------------|
 | Student    | Antriksh Dhand     | adha5655@uni.sydney.edu.au   |
-
-
