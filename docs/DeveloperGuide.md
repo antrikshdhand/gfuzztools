@@ -29,7 +29,7 @@ This is a concise reference to help you navigate and utilize the `gfuzztools` C 
 
 ### `unify_key_inv()` – the basic fuzzer
 
- The program simply aims to generates random strings from a given grammar.  The program is reliant on two inputs to run: your `Grammar`, and the `Token` you wish to start fuzzing from.
+The program simply aims to generates random strings from a given grammar. The program is reliant on two inputs to run: your `Grammar`, and the `Token` you wish to start fuzzing from.
 
 1. Initialise your `TokenArray` to store the fuzzed strings:
 ```c
@@ -50,6 +50,8 @@ unify_key_inv(token, &grammar, &fuzzed)
 print_token_array(&fuzzed);
 ```
 
+To ensure randomness of the `rand()` function, ensure to set the seed to the current time by placing `srand((unsigned int)time(NULL));` at the start of your main function.
+
 This is an implementation of [The simplest grammar fuzzer in the world](https://rahul.gopinath.org/post/2019/05/28/simplefuzzer-01/) in C.
 
 > **Try it out!**
@@ -59,7 +61,6 @@ This is an implementation of [The simplest grammar fuzzer in the world](https://
 >
 > You should see three different 8-bit tokens printed to your terminal each time you run the program.
 
-
 ### `key_get_def()`
 
 `key_get_def()` serves as the cornerstone for obtaining the complete definition of a non-terminal or terminal key in the grammar, given a specific string length.
@@ -67,6 +68,29 @@ This is an implementation of [The simplest grammar fuzzer in the world](https://
 You need to run this function in order to use all other functionality in `gfuzztools`. 
 
 #### Set up hash tables
+
+Note: the three hash tables must be defined as global variables for the program to run:
+
+```c
+// Place these lines before your main() function
+KeyHashTable key_strs;
+RuleHashTable rule_strs;
+GrammarHashTable grammar_hash;
+
+// Surround your runner code with the following initialisation and breakdown code in the main() function.
+
+// Setup
+init_key_hash_table(&key_strs);
+init_rule_hash_table(&rule_strs);
+init_grammar_hash_table(&grammar_hash);
+
+# your program code here
+
+// Cleanup
+breakdown_key_hash_table(&key_strs);
+breakdown_rule_hash_table(&rule_strs);
+breakdown_grammar_hash_table(&grammar_hash);
+```
 
 #### Usage
 
@@ -123,7 +147,20 @@ DynTokenArray* string = get_string_at(definition, index);
 ```
 It navigates through the grammar considering both key nodes and rule nodes to pinpoint the desired string.
 
-These functions collectively allow us to efficiently explore and extract valid strings from a grammar.
+### `string_sample_UAR()`
+
+The first major milestone in `gfuzztools`: the ability to uniformly at random sample a string from a grammar.
+
+This function automatically calls the cornerstone function, so the runner code is extremely simple:
+```c
+Token token = ...;
+Grammar grammar = ...;
+size_t l_str = ...;
+
+DynTokenArray* string = string_sample_UAR(token, &grammar, l_str);
+```
+
+You can then use `print_dta()` to print the sampled string. Similar to `unify_key_inv()` ensure the randomness of the `rand()` function by setting its seed based on the current time: place `srand((unsigned int)time(NULL));` at the start of your main function.
 
 ## Structure
 

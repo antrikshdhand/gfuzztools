@@ -13,5 +13,8 @@ sampling_strings:
 sampling_at:
 	gcc examples/sampling/at.c src/sampling/sampling.c src/sampling/helpers.c src/sampling/grammar_hash_table.c src/sampling/key_hash_table.c src/sampling/rule_hash_table.c src/grammar.c -o bin/sampling_at.o
 
+sampling_uar:
+	gcc examples/sampling/sample.c src/sampling/sampling.c src/sampling/helpers.c src/sampling/grammar_hash_table.c src/sampling/key_hash_table.c src/sampling/rule_hash_table.c src/grammar.c -o bin/sample.o
+
 clean:
 	rm -rf bin/*
