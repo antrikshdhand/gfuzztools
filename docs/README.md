@@ -22,7 +22,7 @@
 - **Fuzzing Functions:** Generate strings from defined grammars for comprehensive testing and validation.
 - **String Extraction:** Extract all strings from a grammar or retrieve a specific string at a given index.
 - **Speed:** Preliminary testing indicates a 20x speedup compared to the Python implementation.
-- **Future Expansion:** Ongoing work includes implementing functionality for randomly sampling strings from grammars.
+- **UAR sampling:** Sample a string of a certain length from a grammar uniformly at random.
 
 <br>
 
@@ -62,12 +62,11 @@ The original motivation of `gfuzztools` was to set up a toolchain to compare the
 We can then combine these two values using the $\text{F1}$ score:
 $$\text{F1 score} = \frac{2 \times \text{Precision} \times \text{Recall}}{\text{Precision} + \text{Recall}}$$
 
-However, it is key that the generating fuzzer is sampling strings **uniformly at random (UAR)**, otherwise [the measure will not be accurate](https://rahul.gopinath.org/post/2021/07/27/random-sampling-from-context-free-grammar/#random-sampling). Hence, the first milestone in `gfuzztools` is to produce a UAR sampler.
+However, it is key that the generating fuzzer is sampling strings **uniformly at random (UAR)**, otherwise [the measure will not be accurate](https://rahul.gopinath.org/post/2021/07/27/random-sampling-from-context-free-grammar/#random-sampling). Hence, the first milestone in `gfuzztools` was to produce a UAR sampler.
 
 ### Future work
 
 `gfuzztools` is a work-in-progress. There are several improvements and additions yet to come, including:
-- Implementing the UAR sampling function
 - Work in the field of grammar inference, including:
     - Implementing Angluin's L* algorithm in C
 

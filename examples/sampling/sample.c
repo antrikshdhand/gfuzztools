@@ -114,17 +114,14 @@ GrammarHashTable grammar_hash;
 int main()
 {
     // Setup
+    srand((unsigned int)time(NULL));
     init_key_hash_table(&key_strs);
     init_rule_hash_table(&rule_strs);
     init_grammar_hash_table(&grammar_hash);
 
     // Use
-    size_t l_str = 11;
-    KeyNode* key_node = key_get_def(START_TOKEN, &GRAMMAR, l_str);
-    DynTokenArray* strings = key_extract_strings(key_node);
-
-	printf("Each DTA node represents one string:\n\n");
-    print_list_of_dtas(strings);
+    DynTokenArray* string = string_sample_UAR(0x80, &GRAMMAR, 11);
+    print_dta(string);
 
     // Cleanup
     breakdown_key_hash_table(&key_strs);
@@ -133,4 +130,3 @@ int main()
 
     return 0;
 }
-

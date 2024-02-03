@@ -3,6 +3,7 @@
 
 #include "../grammar.h"
 #include "hash.h"
+#include <time.h>
 
 /**
  * @brief Retrieves or computes the definition of a non-terminal or terminal key
@@ -28,6 +29,10 @@
  * 
  * @note It is the responsibility of the caller to free the memory allocated 
  *      for the KeyNode when it is no longer needed.
+ * 
+ * @note This function requires the three hash tables `key_strs`, `rule_strs` 
+ *      and `grammar_hash` to be defined as global variables in the calling 
+ *      program.
  * 
  * @see create_key_node, insert_key, get_key, rules_get_def, free_key_node
  */
@@ -151,6 +156,10 @@ DynTokenArray* rule_extract_strings(RuleNode* rn);
  * @note It is the responsibility of the caller to free the memory allocated 
  *      for the DTA when it is no longer needed.
  * 
+ * @note This function requires the three hash tables `key_strs`, `rule_strs` 
+ *      and `grammar_hash` to be defined as global variables in the calling 
+ *      program.
+ * 
  * @see rule_get_string_at
  */
 DynTokenArray* key_get_string_at(KeyNode* kn, int at);
@@ -180,5 +189,27 @@ DynTokenArray* key_get_string_at(KeyNode* kn, int at);
  * @see key_get_string_at, concat_token_arrs
  */
 DynTokenArray* rule_get_string_at(RuleNode* rn, int at);
+
+/**
+ * Uniformly at random samples a string of length `l_str` from the `grammar` 
+ * starting from the specified `key`.
+ * 
+ * Ensure to set the seed of the rand() function in your calling function using
+ * `srand((unsigned int)time(NULL));` to ensure randomness.
+ * 
+ * @param key The starting key for sampling.
+ * @param grammar Pointer to the Grammar structure.
+ * @param l_str The desired length of the sampled string.
+ * 
+ * @return DynTokenArray* A dynamically allocated single TokenArray representing 
+ *      the sampled string.
+ * 
+ * @see key_get_def, key_get_string_at
+ * 
+ * @note This function requires the three hash tables `key_strs`, `rule_strs` 
+ *      and `grammar_hash` to be defined as global variables in the calling 
+ *      program.
+ */
+DynTokenArray* string_sample_UAR(Token key, Grammar* grammar, size_t l_str);
 
 #endif // SAMPLING.h
