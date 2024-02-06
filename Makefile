@@ -1,4 +1,4 @@
-default: ; Options: fuzzer_example, sampling_counts, sampling_strings, sampling_at
+default: ; Options: fuzzer_example, sampling_counts, sampling_strings, sampling_at, sampling_uar
 
 # This Makefile is used to compile the scripts found in ./examples/
 fuzzer_example:

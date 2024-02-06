@@ -330,8 +330,6 @@ DynTokenArray* string_sample_UAR(Token key, Grammar* grammar, size_t l_str)
     KeyNode* kn = key_get_def(key, grammar, l_str);
     
     int at = rand() % kn->count;
-    printf("Extracting string from random index %d\n", at);
-    
     DynTokenArray* string = key_get_string_at(kn, at);
 
     return string;
